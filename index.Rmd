@@ -14,7 +14,7 @@ library(ggthemes)
 ```
 
 
-```{r}
+```{r, echo=FALSE}}
 # identifying rust belt
 rust_belt_fps <- c(42,54,21)
 rust_belt_abr <- c("PA,", "WV,", "KY,")
