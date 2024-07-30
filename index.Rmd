@@ -2,7 +2,9 @@
 output: html_document
 ---
 
+
 ```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
+
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
@@ -13,7 +15,8 @@ library(ggthemes)
 ```
 
 
-```{r, echo=FALSE}
+
+```{r, echo=FALSE}}
 # identifying rust belt
 rust_belt_fps <- c(42,54,21)
 rust_belt_abr <- c("PA,", "WV,", "KY,")
@@ -21,7 +24,9 @@ rust_belt_abr <- c("PA,", "WV,", "KY,")
 
 
 
+
 ```{r process_data, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+
  b_coal <- read_csv(file.path("~", "coal_bituminous.csv")) %>%
   st_as_sf(
      coords=c("Longitude","Latitude"),
