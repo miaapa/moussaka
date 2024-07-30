@@ -16,7 +16,7 @@ library(ggthemes)
 
 
 
-```{r, echo=FALSE}}
+```{r, echo=FALSE}
 # identifying rust belt
 rust_belt_fps <- c(42,54,21)
 rust_belt_abr <- c("PA,", "WV,", "KY,")
@@ -25,15 +25,17 @@ rust_belt_abr <- c("PA,", "WV,", "KY,")
 
 
 
-```{r process_data, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+```{r process_data, echo=FALSE, warning=FALSE, message=FALSE, results='hide', show_col_types = FALSE, messages=FALSE}
 
- b_coal <- read_csv(file.path("~", "coal_bituminous.csv")) %>%
+options(readr.num_columns = 0)
+
+ b_coal <- suppressMessages(read_csv(file.path("~", "coal_bituminous.csv"))) %>%
   st_as_sf(
      coords=c("Longitude","Latitude"),
               remove=FALSE,
               crs=4326)
 
-a_coal <- read_csv(file.path("~", "coal_anthracite.csv")) %>%
+a_coal <- suppressMessages(read_csv(file.path("~", "coal_anthracite.csv"))) %>%
   drop_na() %>%
    st_as_sf(
       coords=c("Longitude","Latitude"),
@@ -66,10 +68,10 @@ us_counties <- read_sf(file.path("~", "d1c73f91dd9d175998ed166eb216994a-e89c35f3
 
 ```
 
-```{r, echo=FALSE}
-wv_cancer <- read_csv(file.path("~", "wv_cancer.csv"))
-pa_cancer <- read_csv(file.path("~", "pa_cancer.csv"))
-ky_cancer <- read_csv(file.path("~", "ky_cancer.csv"))
+```{r, echo=FALSE, messages=FALSE}
+wv_cancer <- suppressMessages(read_csv(file.path("~", "wv_cancer.csv")))
+pa_cancer <- suppressMessages(read_csv(file.path("~", "pa_cancer.csv")))
+ky_cancer <- suppressMessages(read_csv(file.path("~", "ky_cancer.csv")))
 
 ```
 
