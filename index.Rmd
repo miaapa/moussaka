@@ -1,0 +1,110 @@
+---
+title: "My Data Visualization"
+output: html_document
+---
+
+```{r setup}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(sf)
+library(stringr)
+library(patchwork)
+library(ggthemes)
+```
+
+
+```{r}
+# identifying rust belt
+rust_belt_fps <- c(42,54,21)
+rust_belt_abr <- c("PA,", "WV,", "KY,")
+```
+
+
+
+```{r}
+ b_coal <- read_csv(file.path("~", "coal_bituminous.csv")) %>%
+  st_as_sf(
+     coords=c("Longitude","Latitude"),
+              remove=FALSE,
+              crs=4326)
+
+a_coal <- read_csv(file.path("~", "coal_anthracite.csv")) %>%
+  drop_na() %>%
+   st_as_sf(
+      coords=c("Longitude","Latitude"),
+               remove=FALSE,
+               crs=4326)
+
+
+pattern <- paste(rust_belt_abr, collapse = "|")
+pattern
+
+filtered_b <- b_coal %>% filter(str_detect(StateCounties, pattern))
+filtered_a <- a_coal %>% filter(str_detect(StateCounties, pattern)) %>%
+  filter(Longitude < -75 & Latitude < 43)
+
+
+```
+
+
+```{r}
+us <- read_sf(file.path("~", "gz_2010_us_040_00_500k.json")) %>%
+  st_transform(us, crs = 4326)
+
+```
+
+
+```{r}
+us_counties <- read_sf(file.path("~", "d1c73f91dd9d175998ed166eb216994a-e89c35f308cee7e2e5a784e1d3afc5d449e9e4bb/counties.geojson")) %>%
+   filter(STATEFP %in% rust_belt_fps) %>%
+   st_transform(us_counties, crs=4326) 
+
+```
+
+```{r}
+wv_cancer <- read_csv(file.path("~", "wv_cancer.csv"))
+pa_cancer <- read_csv(file.path("~", "pa_cancer.csv"))
+ky_cancer <- read_csv(file.path("~", "ky_cancer.csv"))
+
+```
+
+```{r}
+cancer_combined <- rbind(pa_cancer,wv_cancer,ky_cancer) %>%
+  mutate(FIPS = as.character(FIPS))
+```
+
+```{r}
+us_counties <- us_counties %>% 
+  mutate(fips=paste0(STATEFP, COUNTYFP))
+
+#us_counties
+```
+
+```{r}
+counties_cancer_joined <- full_join(cancer_combined, us_counties, by = c("FIPS" = "fips"))
+counties_cancer_joined <- st_as_sf(counties_cancer_joined)
+
+counties_cancer_joined <- counties_cancer_joined %>%
+  rename(Incidence_Rate = `Age-Adjusted Incidence Rate([rate note]) - cases per 100,000`)
+
+```
+
+
+```{r}
+map1 <- ggplot() +
+  geom_sf(data = counties_cancer_joined %>% filter(!st_is_empty(geometry)), 
+          aes(fill = Incidence_Rate), color = NA) +
+  scale_fill_viridis_c(name="Cancer Incidence Rate", option = "inferno", na.value = "grey50") +
+  ggtitle("Is there a correlation between coal mines and cancer rates?") +
+  theme_void() +
+  theme(text = element_text(family = "mono"))
+
+map2 <- ggplot()+
+  geom_sf(data=us_counties, fill="white", color="black") +
+  geom_sf(data = filtered_b, size=0.5) +
+  geom_sf(data=filtered_a, size=1) +
+  theme_void()
+
+(map1 / map2 ) 
+```
