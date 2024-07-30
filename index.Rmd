@@ -3,7 +3,7 @@ title: "My Data Visualization"
 output: html_document
 ---
 
-```{r setup}
+```{r setup, echo=FALSE}
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
@@ -22,7 +22,7 @@ rust_belt_abr <- c("PA,", "WV,", "KY,")
 
 
 
-```{r}
+```{r, echo=FALSE}
  b_coal <- read_csv(file.path("~", "coal_bituminous.csv")) %>%
   st_as_sf(
      coords=c("Longitude","Latitude"),
@@ -48,40 +48,40 @@ filtered_a <- a_coal %>% filter(str_detect(StateCounties, pattern)) %>%
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 us <- read_sf(file.path("~", "gz_2010_us_040_00_500k.json")) %>%
   st_transform(us, crs = 4326)
 
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 us_counties <- read_sf(file.path("~", "d1c73f91dd9d175998ed166eb216994a-e89c35f308cee7e2e5a784e1d3afc5d449e9e4bb/counties.geojson")) %>%
    filter(STATEFP %in% rust_belt_fps) %>%
    st_transform(us_counties, crs=4326) 
 
 ```
 
-```{r}
+```{r, echo=FALSE}
 wv_cancer <- read_csv(file.path("~", "wv_cancer.csv"))
 pa_cancer <- read_csv(file.path("~", "pa_cancer.csv"))
 ky_cancer <- read_csv(file.path("~", "ky_cancer.csv"))
 
 ```
 
-```{r}
+```{r, echo=FALSE}
 cancer_combined <- rbind(pa_cancer,wv_cancer,ky_cancer) %>%
   mutate(FIPS = as.character(FIPS))
 ```
 
-```{r}
+```{r, echo=FALSE}
 us_counties <- us_counties %>% 
   mutate(fips=paste0(STATEFP, COUNTYFP))
 
 #us_counties
 ```
 
-```{r}
+```{r, echo=FALSE}
 counties_cancer_joined <- full_join(cancer_combined, us_counties, by = c("FIPS" = "fips"))
 counties_cancer_joined <- st_as_sf(counties_cancer_joined)
 
