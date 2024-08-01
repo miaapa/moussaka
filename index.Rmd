@@ -4,14 +4,21 @@ output: html_document
 
 
 ```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
-
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
 library(sf)
 library(stringr)
+install.packages("patchwork")
 library(patchwork)
+install.packages("ggthemes")
 library(ggthemes)
+install.packages("gganimate")
+library(gganimate)
+install.packages("gifski")
+library(gifski)
+install.packages("tigris")
+library(tigris)
 ```
 
 
@@ -114,3 +121,9 @@ map2 <- ggplot()+
 
 (map1 / map2 ) 
 ```
+
+## animation test
+
+
+
+![](test_gifs.gif)
