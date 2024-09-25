@@ -32,7 +32,7 @@ rust_belt_abr <- c("PA,", "WV,", "KY,")
 
 
 
-```{r process_data, echo=FALSE, warning=FALSE, message=FALSE, results='hide', show_col_types = FALSE, messages=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide', show_col_types = FALSE}
 
 options(readr.num_columns = 0)
 
@@ -122,8 +122,104 @@ map2 <- ggplot()+
 (map1 / map2 ) 
 ```
 
+
+```{r process_data, echo=FALSE, warning=FALSE, message=FALSE, results='hide', show_col_types = FALSE, messages=FALSE}
+vax_data <- suppressMessages(read_csv("IL_flu_vax_2022-23.csv") %>% rename(Month = "...7",
+                                                          Coverage = "Flu Vaccination Coverage (%) (County)"))
+
+vax_data$Month <- factor(vax_data$Month, levels = c(
+  "August", "September", "March", "October", "November", "December", "January"
+))
+
+vax_data$Coverage <- as.numeric(gsub("%", "", vax_data$Coverage))
+vax_data$`Suppression label (if applicable)` <- NULL
+
+vax_data <- vax_data %>%
+  group_by(ILCounty) %>%
+  mutate(cum_coverage = cumsum(Coverage))
+
+```
+
+
+```{r}
+il_votes <- suppressMessages(read_csv("il_voting.csv", locale = locale(encoding = "latin1")) %>%
+  mutate(County = gsub(" County", "", County)))
+
+colnames(il_votes)[3] <- "Biden_pct"  # Rename the 3rd column
+colnames(il_votes)[5] <- "Trump_pct"
+
+colnames(vax_data)[1] <- "County"
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+il_votes <- mutate(il_votes, leaning = case_when(
+  Biden_pct > 60 ~ "Strongly Democratic",
+  Biden_pct > 50 ~ "Slightly Democratic",
+  Trump_pct > 60 ~ "Strongly Republican",
+  Trump_pct > 50 ~ "Slightly Republican"
+))
+
+strong_repub <- toupper(il_votes %>% filter(leaning == "Strongly Republican" ) %>% pull(County))
+slight_repub <- toupper(il_votes %>% filter(leaning == "Slightly Republican" ) %>% pull(County))
+strong_dem <- toupper(il_votes %>% filter(leaning == "Strongly Democratic" ) %>% pull(County))
+slight_dem <- toupper(il_votes %>% filter(leaning == "Slightly Democratic" ) %>% pull(County))
+
+test <- vax_data %>% mutate(lean = case_when(
+  County %in% strong_repub ~ "Strongly Republican", 
+  County %in% slight_repub ~ "Slightly Republican",
+  County %in% strong_dem ~ "Strongly Democratic",
+  County %in% slight_dem ~ "Slightly Democratic"))
+
+problem_counties <- test %>% filter(is.na(lean) == TRUE)
+
+test_fix <- test %>%
+  mutate(lean = case_when(
+    County == "DEWITT" ~ "Strongly Republican",
+    County == "JACKSON" ~ "Slightly Republican",
+    County == "LA SALLE" ~ "Slightly Republican", 
+    County == "SAINT CLAIR" ~ "Slightly Democratic",# Manually assign the leaning
+    TRUE ~ lean  # Keep other values unchanged
+  ))
+
+#still_problem <- test_fix %>% filter(is.na(lean)== TRUE)
+
+test_grouped <- test_fix %>%
+  group_by(Month, lean) %>% summarize(avg_coverage = mean(cum_coverage))
+
+
+```
+
+```{r, echo=FALSE, messages=FALSE}
+test_grouped %>%
+  ggplot(aes(x = Month, y = avg_coverage, group = lean, color = lean)) + 
+  geom_line() + 
+  geom_point() + 
+  scale_color_manual(values = c(
+    "Strongly Democratic" = "dodgerblue3",
+    "Slightly Democratic" = "lightblue",
+    "Slightly Republican" = "lightcoral",  # Light red
+    "Strongly Republican" = "red"
+  ),
+  name = "Political Leaning") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5, size = 14), # Centering and formatting the title
+        plot.title.position = "plot",  # Ensures title is fully displayed
+  ) +
+  labs(title = "Flu Vaccination Coverage by Political Leaning in IL 
+       (2022-2023 season)",
+       y = "Average Coverage (%)", 
+       x = "Month")
+
+```
+
+
 ## animation test
 
 
 
 ![](test_gifs.gif)
+
+
